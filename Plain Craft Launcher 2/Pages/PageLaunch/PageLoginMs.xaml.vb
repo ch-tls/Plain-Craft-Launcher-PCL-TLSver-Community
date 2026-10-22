@@ -1,6 +1,11 @@
 Public Class PageLoginMs
 
     ''' <summary>
+    ''' 下一次为“添加新账号”执行登录时是否使用设备代码流程。
+    ''' </summary>
+    Private UseDeviceCode As Boolean = False
+
+    ''' <summary>
     ''' 刷新页面显示的所有信息。
     ''' </summary>
     Public Sub Reload(KeepInput As Boolean)
@@ -42,7 +47,7 @@ Public Class PageLoginMs
         RunInUiWait(
         Sub()
             If FrmLoginMs.ComboAccounts.SelectedIndex = 0 Then
-                Result = New McLoginMs
+                Result = New McLoginMs With {.UseDeviceCode = FrmLoginMs.UseDeviceCode}
             Else
                 Dim Item As MyListItem = FrmLoginMs.ComboAccounts.SelectedItem
                 Result = New McLoginMs With {.OAuthRefreshToken = Item.Tag, .UserName = Item.Title}
@@ -65,8 +70,18 @@ Public Class PageLoginMs
     End Function
 
     Private Sub BtnLogin_Click(sender As Object, e As EventArgs) Handles BtnLogin.Click
+        StartLogin(False)
+    End Sub
+
+    Private Sub BtnLoginDeviceCode_Click(sender As Object, e As EventArgs) Handles BtnLoginDeviceCode.Click
+        StartLogin(True)
+    End Sub
+
+    Private Sub StartLogin(UseDeviceCodeLogin As Boolean)
+        If FrmLoginMs IsNot Nothing Then FrmLoginMs.UseDeviceCode = UseDeviceCodeLogin
         ComboAccounts.IsEnabled = False
         BtnLogin.IsEnabled = False
+        BtnLoginDeviceCode.IsEnabled = False
         BtnLogin.Text = "0%"
         RunInNewThread(
         Sub()
@@ -99,6 +114,7 @@ Public Class PageLoginMs
                 Sub()
                     ComboAccounts.IsEnabled = True
                     BtnLogin.IsEnabled = True
+                    BtnLoginDeviceCode.IsEnabled = True
                     BtnLogin.Text = "登录"
                 End Sub)
             End Try

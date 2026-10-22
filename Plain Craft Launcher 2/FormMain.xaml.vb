@@ -449,7 +449,7 @@ Public Class FormMain
             Telemetry("启动")
             '开源版本提示
             If VersionBranchMain = "OpenSource" Then
-                MyMsgBox($"该版本中无法使用以下特性：{vbCrLf}- CurseForge API 调用：需要自行申请 API Key，然后添加到 ModSecret.vb 的开头{vbCrLf}- 正版登录：需要自行向微软申请 Client ID，然后添加到 ModSecret.vb 的开头{vbCrLf}- 更新与联网通知：避免滥用隐患{vbCrLf}- 主题切换：这是需要赞助解锁的纪念性质的功能，别让赞助者太伤心啦……{vbCrLf}- 百宝箱：开发早期往里面塞了些开发工具，整理起来太麻烦了……", "开源版本说明")
+                MyMsgBox($"该版本使用说明：{vbCrLf}- CurseForge API：请在 下载 -> CurseForge Key 中填写自己的 Key，不要写入源码或随程序分发{vbCrLf}- 正版登录：已内置 Microsoft 公共客户端 ID，开发时可用 PCL_MS_CLIENT_ID 覆盖{vbCrLf}- 更新与联网通知：当前版本不提供{vbCrLf}- 赞助解锁主题：当前版本不提供{vbCrLf}- 百宝箱：当前仅保留自定义文件下载", "开源版本说明")
             End If
         End Sub, "初始化", ThreadPriority.Lowest)
 
@@ -1234,6 +1234,7 @@ Public Class FormMain
         DownloadDataPack = 4
         DownloadResourcePack = 5
         DownloadShader = 6
+        DownloadCurseForge = 7
         SetupLaunch = 0
         SetupLink = 1
         SetupUI = 2

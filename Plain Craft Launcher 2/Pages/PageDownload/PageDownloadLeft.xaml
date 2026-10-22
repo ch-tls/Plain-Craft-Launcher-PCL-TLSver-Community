@@ -54,6 +54,8 @@
                     </x:Array>
                 </local:MyListItem.Buttons>
             </local:MyListItem>
+            <local:MyListItem x:Name="ItemCurseForge" Type="RadioBox" IsScaleAnimationEnabled="False" Tag="7" MinPaddingRight="35" Height="36" VerticalAlignment="Top" Title="CurseForge Key"
+                              LogoScale="0.9" Logo="M256 448V320a256 256 0 0 1 512 0v128h64c35 0 64 29 64 64v384c0 35-29 64-64 64H192c-35 0-64-29-64-64V512c0-35 29-64 64-64h64zm128 0h256V320a128 128 0 0 0-256 0v128zm64 320a64 64 0 0 1 32-120v-136a32 32 0 0 1 64 0v136a64 64 0 0 1-96 120z" />
         </StackPanel>
     </local:MyScrollViewer>
 </local:MyPageLeft>

@@ -7,6 +7,32 @@
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     PanScroll="PanBack">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
-        <TextBlock Text="为便于维护，开源内容中不包含百宝箱功能……" HorizontalAlignment="Center" FontSize="15" Height="30" VerticalAlignment="Center" />
+        <StackPanel Margin="25,10">
+            <local:MyCard Margin="0,15" Title="自定义文件下载">
+                <StackPanel Margin="25,40,25,20">
+                    <TextBlock TextWrapping="Wrap" LineHeight="20"
+                               Text="输入文件的直接下载地址，然后选择保存位置。请只下载来自可信来源的文件。" />
+                    <Grid Margin="0,18,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="110" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="42" />
+                            <RowDefinition Height="42" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="下载地址" VerticalAlignment="Center" />
+                        <local:MyTextBox x:Name="TextCustomUrl" Grid.Column="1" Height="32"
+                                         HintText="https://example.com/file.jar" />
+                        <TextBlock Grid.Row="1" Text="文件名" VerticalAlignment="Center" />
+                        <local:MyTextBox x:Name="TextCustomFileName" Grid.Row="1" Grid.Column="1"
+                                         Height="32" HintText="留空则根据下载地址自动判断" />
+                    </Grid>
+                    <local:MyButton x:Name="BtnCustomDownload" Text="选择保存位置并下载" MinWidth="180"
+                                    Height="35" Padding="13,0" Margin="0,16,0,0"
+                                    HorizontalAlignment="Left" ColorType="Highlight" />
+                </StackPanel>
+            </local:MyCard>
+        </StackPanel>
     </local:MyScrollViewer>
 </local:MyPageRight>

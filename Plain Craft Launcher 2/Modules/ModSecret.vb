@@ -7,15 +7,31 @@ Friend Module ModSecret
     '在开源版的注册表与常规版的注册表隔离，以防数据冲突
     Public Const RegFolder As String = "PCLDebug"
     '用于微软登录的 ClientId
-    Public OAuthClientId As String = If(Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID"), "")
-    'CurseForge API Key
-    Public CurseForgeAPIKey As String = If(Environment.GetEnvironmentVariable("PCL_CURSEFORGE_API_KEY"), "")
+    Private Const DefaultOAuthClientId As String = "3481976b-63bd-4205-b29d-85e45c77162f"
+    Public OAuthClientId As String = If(
+        Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID"),
+        DefaultOAuthClientId).Trim()
+    'CurseForge API Key，优先使用用户在下载页保存的 Key
+    Private _CurseForgeAPIKey As String = Nothing
+    Public ReadOnly Property CurseForgeAPIKey As String
+        Get
+            If _CurseForgeAPIKey IsNot Nothing Then Return _CurseForgeAPIKey
+            Dim SavedKey As String = Settings.Get(Of String)("ToolCurseForgeAPIKey")
+            _CurseForgeAPIKey = If(String.IsNullOrWhiteSpace(SavedKey),
+                                   If(Environment.GetEnvironmentVariable("PCL_CURSEFORGE_API_KEY"), "").Trim(),
+                                   SavedKey.Trim())
+            Return _CurseForgeAPIKey
+        End Get
+    End Property
+    Friend Sub SetCurseForgeAPIKey(Value As String)
+        _CurseForgeAPIKey = If(Value, "").Trim()
+    End Sub
     '用于匿名数据收集的腾讯云日志服务上报 URL，形如 https://{region}.cls.tencentcs.com/track?topic_id={topic_id}
     Public Const ClsBaseUrl As String = ""
 
 #Region "网络鉴权"
 
-    Public Const RestrictMcDownload As Boolean = True
+    Public Const RestrictMcDownload As Boolean = False
     Friend Function SecretCdnSign(UrlWithMark As String) As String
         If Not UrlWithMark.EndsWithF("{CDN}") Then Return UrlWithMark
         Return UrlWithMark.Replace("{CDN}", "").Replace(" ", "%20")
@@ -34,7 +50,7 @@ Friend Module ModSecret
             End If
         End If
         If Not SimulateBrowserHeaders Then Req.Headers.Add("Referer", $"http://{VersionCode}.open.pcl2.server/")
-        If Url.Contains("api.curseforge.com") OrElse Url.Contains("forgecdn.net") Then Req.Headers.Add("x-api-key", CurseForgeAPIKey)
+        If Url.Contains("api.curseforge.com") Then Req.Headers.Add("x-api-key", CurseForgeAPIKey)
     End Sub
 
 #End Region

@@ -1,0 +1,42 @@
+<local:MyPageRight
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:PCL"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" x:Class="PageDownloadCurseForge"
+    PanScroll="PanBack">
+    <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+        <StackPanel Margin="25,10">
+            <local:MyCard Margin="0,15" Title="CurseForge API Key">
+                <StackPanel Margin="25,40,25,20">
+                    <TextBlock TextWrapping="Wrap" LineHeight="20"
+                               Text="在此填写你自己的 CurseForge API Key。Key 会使用当前 Windows 用户的本地密钥加密保存，输入框始终以 * 隐藏内容。" />
+                    <TextBlock TextWrapping="Wrap" LineHeight="20" Margin="0,6,0,16" Opacity="0.7"
+                               Text="公开分发程序时不要附带 Key。每个用户应填写自己的 Key，或由后续的服务器代理统一提供接口。" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="110" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="API Key" VerticalAlignment="Center" />
+                        <PasswordBox x:Name="TextCurseForgeKey" Grid.Column="1" Height="34"
+                                     Padding="10,0" FontSize="14" PasswordChar="*"
+                                     VerticalContentAlignment="Center" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                        <local:MyButton x:Name="BtnSaveKey" Text="保存并测试" MinWidth="140" Height="35"
+                                        Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" />
+                        <local:MyButton x:Name="BtnClearKey" Text="清除 Key" MinWidth="140" Height="35"
+                                        Padding="13,0" Margin="0,0,20,0" />
+                        <local:MyButton Text="获取 CurseForge Key" MinWidth="180" Height="35"
+                                        Padding="13,0" local:CustomEventService.EventType="打开网页"
+                                        local:CustomEventService.EventData="https://console.curseforge.com/" />
+                    </StackPanel>
+                    <local:MyHint x:Name="HintKeyState" Margin="0,16,0,0" Theme="Blue"
+                                  Text="尚未读取 Key 状态。" />
+                </StackPanel>
+            </local:MyCard>
+        </StackPanel>
+    </local:MyScrollViewer>
+</local:MyPageRight>

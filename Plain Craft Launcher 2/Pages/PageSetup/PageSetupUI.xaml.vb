@@ -476,12 +476,8 @@ Refresh:
             If Not Settings.Get(Of Boolean)("UiHiddenOtherHelp") Then OtherAvaliableCount += 1
             If Not Settings.Get(Of Boolean)("UiHiddenOtherAbout") Then OtherAvaliableCount += 1
             If Not Settings.Get(Of Boolean)("UiHiddenOtherTest") Then OtherAvaliableCount += 1
-            If Not Settings.Get(Of Boolean)("UiHiddenOtherFeedback") Then OtherAvaliableCount += 1
-            If Not Settings.Get(Of Boolean)("UiHiddenOtherVote") Then OtherAvaliableCount += 1
             If FrmOtherLeft IsNot Nothing Then
                 FrmOtherLeft.ItemHelp.Visibility = If(Not HiddenForceShow AndAlso Settings.Get(Of Boolean)("UiHiddenOtherHelp"), Visibility.Collapsed, Visibility.Visible)
-                FrmOtherLeft.ItemFeedback.Visibility = If(Not HiddenForceShow AndAlso Settings.Get(Of Boolean)("UiHiddenOtherFeedback"), Visibility.Collapsed, Visibility.Visible)
-                FrmOtherLeft.ItemVote.Visibility = If(Not HiddenForceShow AndAlso Settings.Get(Of Boolean)("UiHiddenOtherVote"), Visibility.Collapsed, Visibility.Visible)
                 FrmOtherLeft.ItemAbout.Visibility = If(Not HiddenForceShow AndAlso Settings.Get(Of Boolean)("UiHiddenOtherAbout"), Visibility.Collapsed, Visibility.Visible)
                 FrmOtherLeft.ItemTest.Visibility = If(Not HiddenForceShow AndAlso Settings.Get(Of Boolean)("UiHiddenOtherTest"), Visibility.Collapsed, Visibility.Visible)
                 '隐藏左边选择卡
@@ -544,17 +540,12 @@ Refresh:
             '开启
             CheckHiddenOtherAbout.Checked = True
             CheckHiddenOtherTest.Checked = True
-            CheckHiddenOtherFeedback.Checked = True
-            CheckHiddenOtherVote.Checked = True
             CheckHiddenOtherHelp.Checked = True
         Else
             '关闭
-            If Settings.Get(Of Boolean)("UiHiddenOtherHelp") AndAlso Settings.Get(Of Boolean)("UiHiddenOtherAbout") AndAlso Settings.Get(Of Boolean)("UiHiddenOtherTest") AndAlso
-                Settings.Get(Of Boolean)("UiHiddenOtherVote") AndAlso Settings.Get(Of Boolean)("UiHiddenOtherFeedback") Then
+            If Settings.Get(Of Boolean)("UiHiddenOtherHelp") AndAlso Settings.Get(Of Boolean)("UiHiddenOtherAbout") AndAlso Settings.Get(Of Boolean)("UiHiddenOtherTest") Then
                 CheckHiddenOtherAbout.Checked = False
                 CheckHiddenOtherTest.Checked = False
-                CheckHiddenOtherFeedback.Checked = False
-                CheckHiddenOtherVote.Checked = False
                 CheckHiddenOtherHelp.Checked = False
             End If
         End If
@@ -567,22 +558,6 @@ Refresh:
         Else
             '未被全部隐藏
             CheckHiddenPageOther.Checked = False
-        End If
-        '修改无具体内容的项
-        If Not user Then Return
-        If Settings.Get(Of Boolean)("UiHiddenOtherHelp") AndAlso Settings.Get(Of Boolean)("UiHiddenOtherAbout") AndAlso Settings.Get(Of Boolean)("UiHiddenOtherTest") Then
-            CheckHiddenOtherFeedback.Checked = True
-            CheckHiddenOtherVote.Checked = True
-        End If
-    End Sub
-    Private Sub HiddenOtherNet(sender As Object, user As Boolean) Handles CheckHiddenOtherFeedback.Change, CheckHiddenOtherVote.Change
-        '更多子页面（无具体内容的）
-        If Not user Then Return
-        If Settings.Get(Of Boolean)("UiHiddenOtherHelp") AndAlso Settings.Get(Of Boolean)("UiHiddenOtherAbout") AndAlso Settings.Get(Of Boolean)("UiHiddenOtherTest") AndAlso
-            (Not Settings.Get(Of Boolean)("UiHiddenOtherFeedback") OrElse Not Settings.Get(Of Boolean)("UiHiddenOtherVote")) Then
-            CheckHiddenOtherAbout.Checked = False
-            CheckHiddenOtherTest.Checked = False
-            CheckHiddenOtherHelp.Checked = False
         End If
     End Sub
 

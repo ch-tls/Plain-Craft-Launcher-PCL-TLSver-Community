@@ -82,6 +82,7 @@ StyleCopReport.xml
 *.tmp
 *.tmp_proj
 *_wpftmp.csproj
+*_wpftmp.vbproj
 *.log
 *.vspscc
 *.vssscc
@@ -342,3 +343,8 @@ ASALocalRun/
 healthchecksdb
 
 MaskFiles/
+
+# Local release archives and temporary workspace files
+/更新正式版.zip
+.codex-*/
+.vscode/

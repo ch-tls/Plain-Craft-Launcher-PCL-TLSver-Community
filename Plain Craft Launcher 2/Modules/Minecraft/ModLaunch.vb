@@ -357,6 +357,10 @@ NextInner:
         Public Uuid As String = ""
         Public UserName As String = ""
         Public ProfileJson As String = ""
+        ''' <summary>
+        ''' 是否改用兼容性更好的设备代码流程登录。
+        ''' </summary>
+        Public UseDeviceCode As Boolean = False
 
         Public Sub New()
             Type = McLoginType.Ms
@@ -564,7 +568,11 @@ NextInner:
         If Input.OAuthRefreshToken = "" Then
             '无 RefreshToken
 Relogin:
-            OAuthTokens = MsLoginStep1New(Data)
+            If Input.UseDeviceCode Then
+                OAuthTokens = MsLoginStep1New(Data)
+            Else
+                OAuthTokens = MsLoginStep1AuthorizationCode(Data)
+            End If
         Else
             '有 RefreshToken
             OAuthTokens = MsLoginStep1Refresh(Input.OAuthRefreshToken)
@@ -878,7 +886,196 @@ LoginFinish:
         End Try
     End Function
 
-    '微软登录步骤 1，原始登录：获取 DeviceCode 并开启登录网页
+    Private Const MsOAuthRedirectUri As String = "http://localhost:2350/callback"
+    Private Const MsOAuthScope As String = "XboxLive.signin offline_access"
+
+    '微软登录步骤 1，浏览器授权码登录
+    Private Function MsLoginStep1AuthorizationCode(Data As LoaderTask(Of McLoginMs, McLoginResult)) As (OAuthAccessToken As String, OAuthRefreshToken As String)
+        McLaunchLog("开始微软登录步骤 1/6（浏览器授权码）")
+        If String.IsNullOrWhiteSpace(OAuthClientId) Then
+            Throw New Exception("$当前版本没有配置 Microsoft OAuth Client ID，无法进行正版登录。")
+        End If
+
+        Dim State As String = Guid.NewGuid().ToString("N")
+        Dim CodeVerifier As String = MsLoginCreatePkceVerifier()
+        Dim CodeChallenge As String = MsLoginBase64UrlEncode(
+            System.Security.Cryptography.SHA256.Create().ComputeHash(Encoding.ASCII.GetBytes(CodeVerifier)))
+        Dim AuthorizationUrl As String =
+            "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?" &
+            "client_id=" & StringUtils.UrlEscape(OAuthClientId.Trim) &
+            "&response_type=code" &
+            "&redirect_uri=" & StringUtils.UrlEscape(MsOAuthRedirectUri) &
+            "&response_mode=query" &
+            "&scope=" & StringUtils.UrlEscape(MsOAuthScope) &
+            "&state=" & StringUtils.UrlEscape(State) &
+            "&code_challenge=" & StringUtils.UrlEscape(CodeChallenge) &
+            "&code_challenge_method=S256"
+
+        Dim Listener As New System.Net.Sockets.TcpListener(Net.IPAddress.Loopback, 2350)
+        Try
+            Try
+                Listener.Start()
+            Catch ex As Exception
+                Throw New Exception("$无法监听 http://localhost:2350/callback，端口可能已被占用。你可以改用设备代码登录。", ex)
+            End Try
+
+            Hint("已打开浏览器，请在 Microsoft 页面完成登录。")
+            OpenWebsite(AuthorizationUrl)
+            Dim AuthorizationCode As String = MsLoginWaitForAuthorizationCode(Listener, Data, State)
+            Return MsLoginExchangeAuthorizationCode(AuthorizationCode, CodeVerifier)
+        Finally
+            Listener.Stop()
+        End Try
+    End Function
+
+    Private Function MsLoginWaitForAuthorizationCode(Listener As System.Net.Sockets.TcpListener,
+                                                     Data As LoaderTask(Of McLoginMs, McLoginResult),
+                                                     ExpectedState As String) As String
+        Dim Deadline As Date = Date.UtcNow.AddMinutes(5)
+        Do
+            If Data.IsCanceled Then Throw New OperationCanceledException
+            Dim AcceptTask = Listener.AcceptTcpClientAsync()
+            Do While Not AcceptTask.Wait(250)
+                If Data.IsCanceled Then Throw New OperationCanceledException
+                If Date.UtcNow >= Deadline Then
+                    Throw New Exception("$等待浏览器登录回调超时。你可以重试，或改用设备代码登录。")
+                End If
+            Loop
+            Using Client As System.Net.Sockets.TcpClient = AcceptTask.Result
+                Dim AuthorizationCode As String = Nothing
+                If MsLoginHandleAuthorizationCallback(Client, ExpectedState, AuthorizationCode) Then
+                    Return AuthorizationCode
+                End If
+            End Using
+        Loop
+    End Function
+
+    Private Function MsLoginHandleAuthorizationCallback(Client As System.Net.Sockets.TcpClient,
+                                                        ExpectedState As String,
+                                                        ByRef AuthorizationCode As String) As Boolean
+        Using Stream = Client.GetStream()
+            Client.ReceiveTimeout = 5000
+            Dim Reader As New IO.StreamReader(Stream, Encoding.ASCII, False, 1024, True)
+            Dim RequestLine As String = Reader.ReadLine()
+            If String.IsNullOrWhiteSpace(RequestLine) Then Return False
+            Dim RequestParts = RequestLine.Split(" "c)
+            If RequestParts.Length < 2 Then Return False
+
+            Dim RequestUri As Uri = Nothing
+            If Not Uri.TryCreate("http://localhost" & RequestParts(1), UriKind.Absolute, RequestUri) OrElse
+               RequestUri.AbsolutePath <> "/callback" Then
+                MsLoginWriteBrowserResponse(Stream, 404, "未找到", "登录回调地址无效。")
+                Return False
+            End If
+
+            Dim Query = MsLoginParseQuery(RequestUri.Query.TrimStart("?"c))
+            Dim ErrorValue As String = Nothing
+            Dim ErrorDescription As String = Nothing
+            Query.TryGetValue("error", ErrorValue)
+            Query.TryGetValue("error_description", ErrorDescription)
+            If Not String.IsNullOrWhiteSpace(ErrorValue) Then
+                MsLoginWriteBrowserResponse(Stream, 400, "登录未完成", ErrorDescription)
+                Throw New Exception("$Microsoft 登录未完成：" & If(ErrorDescription, ErrorValue))
+            End If
+
+            Dim ReturnedState As String = Nothing
+            If Not Query.TryGetValue("state", ReturnedState) OrElse ReturnedState <> ExpectedState Then
+                MsLoginWriteBrowserResponse(Stream, 400, "登录校验失败", "登录状态校验失败，请返回启动器重试。")
+                Return False
+            End If
+
+            If Not Query.TryGetValue("code", AuthorizationCode) OrElse String.IsNullOrWhiteSpace(AuthorizationCode) Then
+                MsLoginWriteBrowserResponse(Stream, 400, "登录未完成", "Microsoft 没有返回授权码。")
+                Return False
+            End If
+
+            MsLoginWriteBrowserResponse(Stream, 200, "登录成功", "Microsoft 账号授权已完成，可以关闭此页面并返回启动器。")
+            Return True
+        End Using
+    End Function
+
+    Private Sub MsLoginWriteBrowserResponse(Stream As IO.Stream, StatusCode As Integer, Title As String, Message As String)
+        Dim SafeTitle As String = Net.WebUtility.HtmlEncode(Title)
+        Dim SafeMessage As String = Net.WebUtility.HtmlEncode(If(Message, ""))
+        Dim Html As String =
+            "<!doctype html><html><head><meta charset=""utf-8""><title>" & SafeTitle & "</title></head>" &
+            "<body style=""font-family:Segoe UI,Microsoft YaHei,sans-serif;padding:48px;background:#f5f8fc;color:#24364b"">" &
+            "<h2 style=""color:#1976d2"">" & SafeTitle & "</h2><p>" & SafeMessage & "</p></body></html>"
+        Dim BodyBytes As Byte() = Encoding.UTF8.GetBytes(Html)
+        Dim Reason As String = If(StatusCode = 200, "OK", If(StatusCode = 404, "Not Found", "Bad Request"))
+        Dim Header As String =
+            $"HTTP/1.1 {StatusCode} {Reason}{vbCrLf}" &
+            "Content-Type: text/html; charset=utf-8" & vbCrLf &
+            $"Content-Length: {BodyBytes.Length}{vbCrLf}" &
+            "Connection: close" & vbCrLf & vbCrLf
+        Dim HeaderBytes As Byte() = Encoding.ASCII.GetBytes(Header)
+        Stream.Write(HeaderBytes, 0, HeaderBytes.Length)
+        Stream.Write(BodyBytes, 0, BodyBytes.Length)
+        Stream.Flush()
+    End Sub
+
+    Private Function MsLoginParseQuery(Query As String) As Dictionary(Of String, String)
+        Dim Result As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
+        If String.IsNullOrWhiteSpace(Query) Then Return Result
+        For Each Part As String In Query.Split("&"c)
+            Dim SeparatorIndex As Integer = Part.IndexOf("="c)
+            Dim Key As String, Value As String
+            If SeparatorIndex < 0 Then
+                Key = Uri.UnescapeDataString(Part.Replace("+", " "))
+                Value = ""
+            Else
+                Key = Uri.UnescapeDataString(Part.Substring(0, SeparatorIndex).Replace("+", " "))
+                Value = Uri.UnescapeDataString(Part.Substring(SeparatorIndex + 1).Replace("+", " "))
+            End If
+            Result(Key) = Value
+        Next
+        Return Result
+    End Function
+
+    Private Function MsLoginCreatePkceVerifier() As String
+        Dim RandomBytes(31) As Byte
+        Using Generator = System.Security.Cryptography.RandomNumberGenerator.Create()
+            Generator.GetBytes(RandomBytes)
+        End Using
+        Return MsLoginBase64UrlEncode(RandomBytes)
+    End Function
+
+    Private Function MsLoginBase64UrlEncode(Value As Byte()) As String
+        Return Convert.ToBase64String(Value).TrimEnd("="c).Replace("+", "-").Replace("/", "_")
+    End Function
+
+    Private Function MsLoginExchangeAuthorizationCode(AuthorizationCode As String,
+                                                      CodeVerifier As String) As (OAuthAccessToken As String, OAuthRefreshToken As String)
+        Dim Content As String =
+            "client_id=" & StringUtils.UrlEscape(OAuthClientId.Trim) &
+            "&grant_type=authorization_code" &
+            "&code=" & StringUtils.UrlEscape(AuthorizationCode) &
+            "&redirect_uri=" & StringUtils.UrlEscape(MsOAuthRedirectUri) &
+            "&code_verifier=" & StringUtils.UrlEscape(CodeVerifier) &
+            "&scope=" & StringUtils.UrlEscape(MsOAuthScope)
+        Dim Result As String
+        Try
+            Result = NetRequestByClientRetry("https://login.microsoftonline.com/consumers/oauth2/v2.0/token",
+                HttpMethod.Post, Content:=Content, ContentType:="application/x-www-form-urlencoded", RequireJson:=True)
+        Catch ex As HttpRequestCodeException
+            Dim ErrorDescription As String = ex.Response
+            Try
+                Dim ErrorJson = ErrorDescription.DeserializeJson()
+                ErrorDescription = If(ErrorJson("error_description")?.ToString, ex.Response)
+            Catch
+            End Try
+            Throw New Exception("$Microsoft 授权码兑换失败：" & ErrorDescription, ex)
+        End Try
+        Dim ResultJson As JObject = Result.DeserializeJson()
+        Dim AccessToken As String = ResultJson("access_token").ToString()
+        Dim RefreshToken As String = ResultJson("refresh_token")?.ToString()
+        If String.IsNullOrWhiteSpace(RefreshToken) Then
+            Throw New Exception("$Microsoft 没有返回 Refresh Token，无法保存登录状态。")
+        End If
+        Return (AccessToken, RefreshToken)
+    End Function
+
+    '微软登录步骤 1，兼容流程：获取 DeviceCode 并开启登录网页
     Private Function MsLoginStep1New(Data As LoaderTask(Of McLoginMs, McLoginResult)) As (OAuthAccessToken As String, OAuthRefreshToken As String)
         '参考：https://learn.microsoft.com/zh-cn/entra/identity-platform/v2-oauth2-device-code
 
@@ -916,7 +1113,7 @@ Retry:
 
         Dim Result As String
         Try
-            Result = NetRequestByClientMultiple("https://login.live.com/oauth20_token.srf", HttpMethod.Post,
+            Result = NetRequestByClientMultiple("https://login.microsoftonline.com/consumers/oauth2/v2.0/token", HttpMethod.Post,
                 Content:=$"client_id={OAuthClientId}&refresh_token={StringUtils.FormUrlEscape(Code)}&grant_type=refresh_token&scope=XboxLive.signin%20offline_access",
                 ContentType:="application/x-www-form-urlencoded",
                 Headers:={{"Accept-Language", "en-US,en;q=0.5"}, {"X-Requested-With", "XMLHttpRequest"}},
