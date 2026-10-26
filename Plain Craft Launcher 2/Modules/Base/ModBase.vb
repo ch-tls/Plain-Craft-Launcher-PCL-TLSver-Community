@@ -16,6 +16,9 @@ Public Module ModBase
 
     '版本信息
     Public Const VersionDisplay As String = BuildTypeDisplay & " " & VersionBaseName
+
+    ''' <summary>启动器在标题栏显示的默认名称。</summary>
+    Public Const LauncherTitle As String = "PCL-TLSver"
 #If DEBUG Then
     Public Const BuildTypeDisplay As String = "开发版"
     Public Const BuildType As BuildTypes = BuildTypes.Debug

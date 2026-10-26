@@ -6,16 +6,169 @@
     xmlns:behaviors="clr-namespace:PCL.Controls.Behaviors"
     xmlns:local="clr-namespace:PCL" PanScroll="PanBack">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
-        <StackPanel Name="PanMain" Margin="25,25,25,10" Grid.IsSharedSizeScope="True">
-            <local:MyHint x:Name="PanHint" RelativeSetup="HintSnapshot" Theme="Blue" CanClose="True" Margin="0,0,0,15"
-                          Text="快照版 PCL 包含尚未正式发布的测试功能，仅限赞助者自己使用。&#xa;请不要随意发给其他人，或是用来制作整合包哦！" />
-            <StackPanel x:Name="PanCustom">
+        <Grid>
+            <StackPanel Name="PanMain" Margin="25,25,25,10" Grid.IsSharedSizeScope="True">
+                <local:MyHint x:Name="PanHint" RelativeSetup="HintSnapshot" Theme="Blue" CanClose="True" Margin="0,0,0,15"
+                              Text="快照版 PCL 包含尚未正式发布的测试功能，仅限赞助者自己使用。&#xa;请不要随意发给其他人，或是用来制作整合包哦！" />
+                <StackPanel x:Name="PanCustom">
+                </StackPanel>
+                <local:MyCard Margin="0,0,0,15" Title="启动日志" x:Name="PanLog">
+                    <local:MyTextBox x:Name="LabLog" Margin="15,34,15,13" Padding="0,4" IsReadOnly="True" IsUndoEnabled="False"
+                             AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" HasBackground="False"
+                             VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" />
+                </local:MyCard>
             </StackPanel>
-            <local:MyCard Margin="0,0,0,15" Title="启动日志" x:Name="PanLog">
-                <local:MyTextBox x:Name="LabLog" Margin="15,34,15,13" Padding="0,4" IsReadOnly="True" IsUndoEnabled="False"
-                         AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" HasBackground="False"
-                         VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" />
-            </local:MyCard>
-        </StackPanel>
+
+            <StackPanel x:Name="PanServerManager" Margin="25,25,25,10" Visibility="Collapsed">
+                <local:MyCard Margin="0,0,0,15" Title="服务器信息">
+                    <StackPanel Margin="25,40,25,20">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="40" />
+                                <RowDefinition Height="40" />
+                                <RowDefinition Height="40" />
+                                <RowDefinition Height="40" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="名称" VerticalAlignment="Center" />
+                            <local:MyTextBox x:Name="TextServerLaunchName" Grid.Column="1" Grid.ColumnSpan="2" Height="30" MaxLength="100" />
+                            <TextBlock Grid.Row="1" Text="目录" VerticalAlignment="Center" />
+                            <TextBlock x:Name="LabServerLaunchFolder" Grid.Row="1" Grid.Column="1"
+                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <local:MyButton x:Name="BtnOpenServerLaunchFolder" Grid.Row="1" Grid.Column="2"
+                                            Text="打开" MinWidth="70" Height="30" Padding="10,0" />
+                            <TextBlock Grid.Row="2" Text="核心" VerticalAlignment="Center" />
+                            <TextBlock x:Name="LabServerLaunchCore" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Grid.Row="3" Text="Minecraft 版本" VerticalAlignment="Center" />
+                            <local:MyTextBox x:Name="TextServerLaunchVersion" Grid.Row="3" Grid.Column="1"
+                                             Grid.ColumnSpan="2" Height="30" HintText="例如 1.21.1 或 26.3" />
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <local:MyButton x:Name="BtnSaveServerLaunch" Text="保存服务器设置"
+                                            MinWidth="150" Height="35" Padding="13,0" ColorType="Highlight" />
+                            <local:MyButton x:Name="BtnServerFileEditor" Text="文件浏览与编辑" Margin="12,0,0,0"
+                                            MinWidth="150" Height="35" Padding="13,0" />
+                            <TextBlock Margin="16,0,0,0" VerticalAlignment="Center" Opacity="0.6"
+                                       Text="启动前也会自动保存当前设置。" />
+                        </StackPanel>
+                    </StackPanel>
+                </local:MyCard>
+
+                <local:MyCard Margin="0,0,0,15" Title="内存、Java 与参数">
+                    <StackPanel Margin="25,40,25,20">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="40" />
+                                <RowDefinition Height="40" />
+                                <RowDefinition Height="40" />
+                                <RowDefinition Height="40" />
+                                <RowDefinition Height="40" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="内存（MB）" VerticalAlignment="Center" />
+                            <Grid Grid.Column="1" Grid.ColumnSpan="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="50" />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <local:MyTextBox x:Name="TextServerLaunchXms" Height="30" HintText="最小内存" />
+                                <TextBlock Grid.Column="1" Text="至" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                <local:MyTextBox x:Name="TextServerLaunchXmx" Grid.Column="2" Height="30" HintText="最大内存" />
+                            </Grid>
+                            <TextBlock Grid.Row="1" Text="Java" VerticalAlignment="Center" />
+                            <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <local:MyComboBox x:Name="ComboServerLaunchJava" Height="30" IsEditable="True"
+                                                  HintText="java.exe 或完整路径" />
+                                <local:MyButton x:Name="BtnSelectServerLaunchJava" Grid.Column="1"
+                                                Text="选择" MinWidth="70" Height="30" Padding="10,0" Margin="8,0,0,0" />
+                                <local:MyButton x:Name="BtnScanServerJava" Grid.Column="2"
+                                                Text="扫描 Java" MinWidth="96" Height="30" Padding="10,0" Margin="8,0,0,0"
+                                                ToolTip="扫描本机所有 Java（与启动页的 Java 列表共用同一份扫描结果）" />
+                            </Grid>
+                            <TextBlock Grid.Row="2" Text="端口" VerticalAlignment="Center" />
+                            <Grid Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <local:MyTextBox x:Name="TextServerLaunchPort" Height="30" HintText="25565" />
+                                <local:MyCheckBox x:Name="CheckServerLaunchNoGui" Grid.Column="1" Margin="20,0,0,0"
+                                                  VerticalAlignment="Center" Text="无界面模式（nogui）" />
+                            </Grid>
+                            <TextBlock Grid.Row="3" Text="附加 JVM 参数" VerticalAlignment="Center" />
+                            <local:MyTextBox x:Name="TextServerLaunchJvmArgs" Grid.Row="3" Grid.Column="1"
+                                             Grid.ColumnSpan="2" Height="30" />
+                            <TextBlock Grid.Row="4" Text="附加服务端参数" VerticalAlignment="Center" />
+                            <local:MyTextBox x:Name="TextServerLaunchArgs" Grid.Row="4" Grid.Column="1"
+                                             Grid.ColumnSpan="2" Height="30" />
+                        </Grid>
+                        <TextBlock x:Name="LabServerJavaHint" Margin="0,10,0,0" TextWrapping="Wrap" Opacity="0.75"
+                                   FontSize="12.5" Text="正在读取本机 Java 列表……" />
+                    </StackPanel>
+                </local:MyCard>
+
+                <local:MyCard Margin="0,0,0,15" Title="启动与 EULA">
+                    <StackPanel Margin="25,40,25,20">
+                        <TextBlock TextWrapping="Wrap" LineHeight="20"
+                                   Text="启动按钮会在 Windows 默认终端中运行服务器，启动器不会接管服务器进程。首次启动后由核心生成 eula.txt。" />
+                        <TextBlock x:Name="LabServerLaunchEula" Margin="0,12,0,0" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <local:MyButton x:Name="BtnRefreshServerLaunchEula" Text="刷新 EULA 状态"
+                                            MinWidth="140" Height="35" Padding="13,0" Margin="0,0,16,0" />
+                            <local:MyButton x:Name="BtnAcceptServerLaunchEula" Text="我已阅读并同意 EULA"
+                                            MinWidth="190" Height="35" Padding="13,0" Margin="0,0,16,0"
+                                            ColorType="Highlight" />
+                            <local:MyButton Text="查看 EULA" MinWidth="120" Height="35" Padding="13,0"
+                                            local:CustomEventService.EventType="打开网页"
+                                            local:CustomEventService.EventData="https://aka.ms/MinecraftEULA" />
+                        </StackPanel>
+                    </StackPanel>
+                </local:MyCard>
+
+                <local:MyCard Margin="0,0,0,15" Title="Mod 与插件">
+                    <StackPanel Margin="25,40,25,20">
+                        <TextBlock TextWrapping="Wrap" LineHeight="20" Opacity="0.7"
+                                   Text="管理服务器目录中的本地 JAR 文件。禁用会重命名为 .disabled，重新启用后恢复为 .jar。" />
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="内容目录" VerticalAlignment="Center" />
+                            <local:MyComboBox x:Name="ComboServerContentFolder" Grid.Column="1" Height="30">
+                                <local:MyComboBoxItem Content="Mod（mods）" Tag="mods" />
+                                <local:MyComboBoxItem Content="插件（plugins）" Tag="plugins" />
+                            </local:MyComboBox>
+                            <local:MyButton x:Name="BtnOpenServerContentFolder" Grid.Column="2" Text="打开"
+                                            MinWidth="70" Height="30" Padding="10,0" Margin="12,0,0,0" />
+                            <local:MyButton x:Name="BtnAddServerContent" Grid.Column="3" Text="添加文件"
+                                            MinWidth="100" Height="30" Padding="10,0" Margin="12,0,0,0" />
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <local:MyButton x:Name="BtnRefreshServerContent" Text="刷新文件列表"
+                                            MinWidth="130" Height="35" Padding="13,0" />
+                        </StackPanel>
+                        <StackPanel x:Name="PanServerContentFiles" Margin="0,12,0,0" />
+                    </StackPanel>
+                </local:MyCard>
+            </StackPanel>
+        </Grid>
     </local:MyScrollViewer>
 </local:MyPageRight>

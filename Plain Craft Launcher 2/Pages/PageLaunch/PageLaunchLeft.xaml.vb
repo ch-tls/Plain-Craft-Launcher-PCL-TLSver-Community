@@ -5,8 +5,14 @@ Public Class PageLaunchLeft
     '加载当前版本
     Private IsLoad As Boolean = False
     Private IsLoadFinished As Boolean = False
+    Public ServerMode As Boolean = False
+    Private IsRefreshingServerList As Boolean = False
     Public Sub PageLaunchLeft_Loaded() Handles Me.Loaded
-        If IsLoad Then RefreshPage(True, False)
+        If IsLoad Then
+            If ServerMode Then RefreshServerList()
+            RefreshPage(True, False)
+            Return
+        End If
 
         AprilPosTrans.X = 0
         AprilPosTrans.Y = 0
@@ -93,9 +99,22 @@ Public Class PageLaunchLeft
                         Thread.Sleep(500)
                         RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.Download, FormMain.PageSubType.DownloadMod))
                         Thread.Sleep(500)
+                        RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.Download, FormMain.PageSubType.DownloadServerPlugin))
+                        Thread.Sleep(500)
                         RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.Setup))
                         Thread.Sleep(500)
                         RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.Other))
+                        Thread.Sleep(500)
+                        RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.Launch))
+                        Thread.Sleep(500)
+                        RunInUi(Sub() EnterServerMode())
+                        Thread.Sleep(500)
+                        RunInUi(
+                        Sub()
+                            If FrmLaunchRight.SelectedServerFolder IsNot Nothing Then FrmLaunchRight.SaveServerSettings(False)
+                        End Sub)
+                        Thread.Sleep(250)
+                        RunInUi(Sub() ExitServerMode())
                         Thread.Sleep(500)
                         RunInUi(Sub() BtnVersion_Click())
                         Thread.Sleep(500)
@@ -114,6 +133,113 @@ Public Class PageLaunchLeft
 
         AniControlEnabled -= 1
     End Sub
+
+#Region "服务器启动与选择"
+
+    Public Sub EnterServerMode()
+        If ServerMode OrElse McLaunchLoader.State = LoadState.Loading Then Return
+        Logger.Info("切换到服务器启动与管理")
+        ServerMode = True
+        PanLaunching.Visibility = Visibility.Collapsed
+        PanInput.Visibility = Visibility.Collapsed
+        PanServer.Visibility = Visibility.Visible
+        FrmLaunchRight.SetServerMode(True)
+        RefreshServerList()
+        AniStart(AaOpacity(PanServer, 1 - PanServer.Opacity, 180), "Server Launch Mode")
+    End Sub
+
+    Public Sub ExitServerMode()
+        If Not ServerMode Then Return
+        Logger.Info("退出服务器启动与管理")
+        ServerMode = False
+        PanServer.Visibility = Visibility.Collapsed
+        PanServer.Opacity = 0
+        PanLaunching.Visibility = Visibility.Collapsed
+        PanInput.Visibility = Visibility.Visible
+        FrmLaunchRight.SetServerMode(False)
+        RefreshButtonsUI()
+    End Sub
+
+    Public Sub RefreshServerList()
+        If Not ServerMode Then Return
+        IsRefreshingServerList = True
+        Dim Previous As String = FrmLaunchRight.SelectedServerFolder
+        ComboServerSelect.Items.Clear()
+        Dim Folders = GetServerFolders()
+        For Each Folder In Folders
+            Dim Config = LoadServerConfig(Folder)
+            Dim CoreName As String = GetConfiguredCoreName(Config)
+            ComboServerSelect.Items.Add(New MyComboBoxItem With {
+                .Content = $"{Config("Name")}（{CoreName} {Config("MinecraftVersion")}）",
+                .Tag = Folder
+            })
+        Next
+        If ComboServerSelect.Items.Count = 0 Then
+            IsRefreshingServerList = False
+            LabServerLaunchInfo.Text = "还没有服务器，请先下载一个服务器核心。"
+            BtnServerLaunch.IsEnabled = False
+            FrmLaunchRight.ClearServer()
+            Return
+        End If
+        Dim Preferred = ComboServerSelect.Items.Cast(Of MyComboBoxItem)().
+            FirstOrDefault(Function(item) Previous IsNot Nothing AndAlso PathUtils.IsSame(item.Tag.ToString, Previous))
+        ComboServerSelect.SelectedItem = If(Preferred, ComboServerSelect.Items(0))
+        IsRefreshingServerList = False
+        SelectServer(ComboServerSelect.SelectedItem.Tag.ToString)
+    End Sub
+
+    Private Sub ComboServerSelect_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboServerSelect.SelectionChanged
+        If IsRefreshingServerList OrElse ComboServerSelect.SelectedItem Is Nothing Then Return
+        SelectServer(ComboServerSelect.SelectedItem.Tag.ToString)
+    End Sub
+
+    Private Sub SelectServer(Folder As String)
+        If String.IsNullOrWhiteSpace(Folder) OrElse Not DirectoryUtils.Exists(Folder) Then Return
+        Dim Config = LoadServerConfig(Folder)
+        Dim CoreName As String = GetConfiguredCoreName(Config)
+        LabServerLaunchInfo.Text = $"{CoreName}  {Config("MinecraftVersion")}{vbCrLf}{Folder}"
+        BtnServerLaunch.IsEnabled = True
+        FrmLaunchRight.SelectServer(Folder)
+    End Sub
+
+    Private Sub BtnRefreshServerList_Click(sender As Object, e As EventArgs) Handles BtnRefreshServerList.Click
+        RefreshServerList()
+    End Sub
+
+    Private Sub BtnServerMode_Click() Handles BtnServerMode.Click
+        EnterServerMode()
+    End Sub
+
+    Private Sub BtnClientMode_Click() Handles BtnClientMode.Click
+        ExitServerMode()
+    End Sub
+
+    Private Sub BtnServerCreate_Click() Handles BtnServerCreate.Click
+        FrmMain.PageChange(FormMain.PageType.Download, FormMain.PageSubType.DownloadServerCore)
+    End Sub
+
+    Private Sub BtnServerLaunch_Click() Handles BtnServerLaunch.Click
+        LaunchSelectedServer()
+    End Sub
+
+    Private Sub LaunchSelectedServer()
+        If FrmLaunchRight.SelectedServerFolder Is Nothing Then
+            Hint("请先创建并选择一个服务器。", HintType.Red)
+            Return
+        End If
+        If Not FrmLaunchRight.SaveServerSettings(False) Then Return
+        Dim Folder As String = FrmLaunchRight.SelectedServerFolder
+        Dim Config = LoadServerConfig(Folder)
+        Try
+            WriteServerPort(Folder, Config("Port").ToObject(Of Integer))
+            LaunchServerInTerminal(Folder, Config)
+            Hint("已打开服务器终端。请直接在该终端中启动和操作服务器。", HintType.Green)
+        Catch ex As Exception
+            Logger.Error(ex, "在终端中启动服务器失败", LogBehavior.Alert)
+        End Try
+    End Sub
+
+#End Region
 
 #Region "切换大页面"
 
@@ -609,6 +735,10 @@ Finish:
     End Sub
     '启动按钮
     Public Sub LaunchButtonClick() Handles BtnLaunch.Click
+        If ServerMode Then
+            LaunchSelectedServer()
+            Return
+        End If
         If McLaunchLoader.State = LoadState.Loading OrElse Not BtnLaunch.IsEnabled OrElse
             (FrmMain.PageRight IsNot Nothing AndAlso FrmMain.PageRight.PageState <> MyPageRight.PageStates.ContentStay AndAlso FrmMain.PageRight.PageState <> MyPageRight.PageStates.ContentEnter) Then Return
         '愚人节处理

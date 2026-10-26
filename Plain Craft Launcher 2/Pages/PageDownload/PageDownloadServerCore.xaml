@@ -1,0 +1,73 @@
+<local:MyPageRight
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:PCL"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" x:Class="PageDownloadServerCore"
+    PanScroll="PanBack">
+    <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+        <StackPanel Margin="25,10">
+            <local:MyCard Margin="0,15" Title="服务器核心">
+                <StackPanel Margin="25,40,25,20">
+                    <TextBlock TextWrapping="Wrap" LineHeight="20"
+                               Text="下载并创建一个新的 Minecraft 服务端。服务器会保存到 PCL\Servers\服务器名称。" />
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="110" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="40" />
+                            <RowDefinition x:Name="RowMslmcCore" Height="0" />
+                            <RowDefinition Height="40" />
+                            <RowDefinition Height="40" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="服务端核心" VerticalAlignment="Center" />
+                        <local:MyComboBox x:Name="ComboServerCoreType" Grid.Column="1" Height="30">
+                            <local:MyComboBoxItem Content="原版服务器（Vanilla）" Tag="0" IsSelected="True" />
+                            <local:MyComboBoxItem Content="Paper" Tag="1" />
+                            <local:MyComboBoxItem Content="Purpur" Tag="2" />
+                            <local:MyComboBoxItem Content="Fabric" Tag="3" />
+                            <local:MyComboBoxItem Content="Forge" Tag="4" />
+                            <local:MyComboBoxItem Content="NeoForge" Tag="5" />
+                            <local:MyComboBoxItem Content="MSLMC 镜像核心" Tag="6" />
+                        </local:MyComboBox>
+
+                        <TextBlock x:Name="LabMslmcCore" Grid.Row="1" Text="镜像核心" VerticalAlignment="Center"
+                                   Visibility="Collapsed" />
+                        <local:MyComboBox x:Name="ComboMslmcCore" Grid.Row="1" Grid.Column="1" Height="30"
+                                          Visibility="Collapsed" />
+
+                        <TextBlock Grid.Row="2" Text="Minecraft 版本" VerticalAlignment="Center" />
+                        <local:MyComboBox x:Name="ComboServerVersion" Grid.Row="2" Grid.Column="1" Height="30" />
+
+                        <TextBlock Grid.Row="3" Text="构建版本" VerticalAlignment="Center" />
+                        <local:MyComboBox x:Name="ComboServerBuild" Grid.Row="3" Grid.Column="1" Height="30" />
+
+                        <TextBlock Grid.Row="4" Text="服务器名称" VerticalAlignment="Center" />
+                        <local:MyTextBox x:Name="TextServerFolderName" Grid.Row="4" Grid.Column="1"
+                                         Height="30" MaxLength="80" HintText="用于区分服务器的文件夹名" />
+                    </Grid>
+
+                    <local:MyHint x:Name="HintServerDownload" Margin="0,14,0,0" Theme="Blue"
+                                  Text="正在准备服务端版本列表……" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <local:MyButton x:Name="BtnRefreshServerCore" Text="刷新列表" MinWidth="120"
+                                        Height="35" Padding="13,0" Margin="0,0,16,0" />
+                        <local:MyButton x:Name="BtnDownloadServerCore" Text="下载并创建服务器" MinWidth="180"
+                                        Height="35" Padding="13,0" ColorType="Highlight" />
+                        <local:MyButton x:Name="BtnCancelServerCore" Text="取消下载" MinWidth="110"
+                                        Height="35" Padding="13,0" Margin="16,0,0,0" Visibility="Collapsed" />
+                    </StackPanel>
+                    <TextBlock TextWrapping="Wrap" Margin="0,12,0,0" Opacity="0.65"
+                               Text="Fabric、Forge 和 NeoForge 会先下载官方安装器并完成服务端安装，因此首次创建耗时更长。创建完成后，请在启动页选择“服务器启动与管理”。首次运行后核心会生成 eula.txt，再由用户自行确认。" />
+                    <TextBlock TextWrapping="Wrap" Margin="0,8,0,0" Opacity="0.55"
+                               Text="MSLMC 请求会串行执行并缓存列表，两次请求至少间隔约 1.5 秒。混合服务器会标记为同时支持插件与 Mod。" />
+                </StackPanel>
+            </local:MyCard>
+        </StackPanel>
+    </local:MyScrollViewer>
+</local:MyPageRight>

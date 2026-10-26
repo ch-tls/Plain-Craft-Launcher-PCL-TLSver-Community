@@ -1,0 +1,56 @@
+<local:MyPageRight
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:PCL"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" x:Class="PageDownloadPlugin"
+    PanScroll="PanBack">
+    <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+        <StackPanel Margin="25,10">
+            <local:MyCard Margin="0,15" Title="服务器插件">
+                <StackPanel Margin="25,40,25,20">
+                    <TextBlock TextWrapping="Wrap" LineHeight="20"
+                               Text="从 Modrinth 官方接口或麦块开放 API（Modrinth / Spigot / CurseForge 三个来源）搜索 Bukkit 系服务器插件，仅显示与目标服务器版本以及 Paper、Purpur 或 MSLMC 混合核心兼容的文件。" />
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="110" />
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="40" />
+                            <RowDefinition Height="40" />
+                            <RowDefinition Height="40" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="目标服务器" VerticalAlignment="Center" />
+                        <local:MyComboBox x:Name="ComboPluginServer" Grid.Column="1" Height="30" />
+                        <local:MyButton x:Name="BtnRefreshPluginServers" Grid.Column="2" Text="刷新"
+                                        MinWidth="90" Height="30" Padding="10,0" Margin="12,0,0,0" />
+                        <TextBlock Grid.Row="1" Text="兼容版本" VerticalAlignment="Center" />
+                        <local:MyTextBox x:Name="TextPluginGameVersion" Grid.Row="1" Grid.Column="1"
+                                         Grid.ColumnSpan="2" Height="30" HintText="例如 1.21.1 或 26.3" />
+                        <TextBlock Grid.Row="2" Text="插件来源" VerticalAlignment="Center" />
+                        <local:MyComboBox x:Name="ComboPluginSource" Grid.Row="2" Grid.Column="1"
+                                          Grid.ColumnSpan="2" Height="30" />
+                    </Grid>
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <local:MySearchBox x:Name="SearchPlugin" HintText="搜索插件名称或功能" />
+                        <local:MyButton x:Name="BtnSearchPlugins" Grid.Column="1" Text="搜索"
+                                        MinWidth="110" Height="40" Padding="13,0" Margin="14,0,0,0"
+                                        ColorType="Highlight" />
+                    </Grid>
+                    <local:MyHint x:Name="HintPlugin" Margin="0,12,0,0" Theme="Blue"
+                                  Text="请选择一个 Paper 或 Purpur 服务器。" />
+                    <StackPanel x:Name="PanPluginResults" Margin="0,8,0,0" />
+                    <TextBlock TextWrapping="Wrap" Margin="0,12,0,0" Opacity="0.6"
+                               Text="点击搜索结果会下载最新可用兼容版本到目标服务器的 plugins 目录。当前不自动解析插件依赖，安装后需重启服务器。麦块来源会优先使用接口提供的直链，作者禁止分发时会提示手动下载。" />
+                </StackPanel>
+            </local:MyCard>
+        </StackPanel>
+    </local:MyScrollViewer>
+</local:MyPageRight>

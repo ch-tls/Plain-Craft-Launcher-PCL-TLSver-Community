@@ -273,9 +273,7 @@ Public Class FormMain
         '输出更新日志
         RunInNewThread(
         Sub()
-            If MyMsgBox(Content, "PCL 已更新至" & VersionDisplay, "确定", "完整更新日志") = 2 Then
-                OpenWebsite("https://meloong.com/afd/a/LTCat?tab=feed")
-            End If
+            MyMsgBox(Content, "PCL 已更新至" & VersionDisplay, "确定")
         End Sub, "UpdateLog Output")
     End Sub
 
@@ -439,17 +437,11 @@ Public Class FormMain
             Catch ex As Exception
                 Logger.Error(ex, "初始化加载池运行失败")
             End Try
-            '清理自动更新文件
-            Try
-                FileUtils.Delete(Paths.Base & "PCL\Plain Craft Launcher 2.exe")
-            Catch ex As Exception
-                Logger.Warn(ex, "清理自动更新文件失败")
-            End Try
             '上报
             Telemetry("启动")
             '开源版本提示
             If VersionBranchMain = "OpenSource" Then
-                MyMsgBox($"该版本使用说明：{vbCrLf}- CurseForge API：请在 下载 -> CurseForge Key 中填写自己的 Key，不要写入源码或随程序分发{vbCrLf}- 正版登录：已内置 Microsoft 公共客户端 ID，开发时可用 PCL_MS_CLIENT_ID 覆盖{vbCrLf}- 更新与联网通知：当前版本不提供{vbCrLf}- 赞助解锁主题：当前版本不提供{vbCrLf}- 百宝箱：当前仅保留自定义文件下载", "开源版本说明")
+                MyMsgBox($"该版本使用说明：{vbCrLf}- CurseForge API：请在 下载 -> CurseForge Key 中填写自己的 Key，不要写入源码或随程序分发{vbCrLf}- 正版登录：已内置 Microsoft 公共客户端 ID，开发时可用 PCL_MS_CLIENT_ID 覆盖{vbCrLf}- 服务器核心与插件下载：请前往 下载 -> 服务器核心 / 服务器插件{vbCrLf}- 服务器启动与管理：请在启动页选择 服务器启动与管理{vbCrLf}- 更新与联网通知：当前版本不提供{vbCrLf}- 赞助解锁主题：当前版本不提供{vbCrLf}- 百宝箱：当前仅保留自定义文件下载", "开源版本说明")
             End If
         End Sub, "初始化", ThreadPriority.Lowest)
 
@@ -752,13 +744,13 @@ Public Class FormMain
                     FrmSetupUI.PanLogoText.Visibility = Visibility.Collapsed
                     FrmSetupUI.PanLogoChange.Visibility = Visibility.Collapsed
                 End If
-            Case 1 '默认
-                ShapeTitleLogo.Visibility = Visibility.Visible
-                LabTitleLogo.Visibility = Visibility.Collapsed
+            Case 1 '默认：标题栏显示 PCL-TLSver 文本标识
+                ShapeTitleLogo.Visibility = Visibility.Collapsed
+                LabTitleLogo.Visibility = Visibility.Visible
                 ImageTitleLogo.Visibility = Visibility.Collapsed
                 If Not IsNothing(FrmSetupUI) Then
                     FrmSetupUI.CheckLogoLeft.Visibility = Visibility.Collapsed
-                    FrmSetupUI.PanLogoText.Visibility = Visibility.Collapsed
+                    FrmSetupUI.PanLogoText.Visibility = Visibility.Visible
                     FrmSetupUI.PanLogoChange.Visibility = Visibility.Collapsed
                 End If
             Case 2 '文本
@@ -788,7 +780,9 @@ Public Class FormMain
         End Select
         FrmSetupUI?.CardLogo.TriggerForceResize()
         '标题栏文本
-        LabTitleLogo.Text = Settings.Get(Of String)("UiLogoText")
+        Dim TitleText As String = Settings.Get(Of String)("UiLogoText")
+        If String.IsNullOrWhiteSpace(TitleText) Then TitleText = LauncherTitle
+        LabTitleLogo.Text = TitleText
         '标题栏文本是否居左
         PanTitleMain.ColumnDefinitions(0).Width = New GridLength(If(Settings.Get(Of Boolean)("UiLogoLeft") AndAlso Settings.Get(Of Integer)("UiLogoType") = 0, 0, 1), GridUnitType.Star)
     End Sub
@@ -825,6 +819,10 @@ Public Class FormMain
 
         '按 ESC 取消启动，或返回上一级
         If e.Key = Key.Escape Then
+            If PageCurrent = FormMain.PageType.Launch AndAlso FrmLaunchLeft.ServerMode Then
+                FrmLaunchLeft.ExitServerMode()
+                Return
+            End If
             If PageCurrent = FormMain.PageType.Launch AndAlso McLaunchLoader.State = LoadState.Loading Then
                 FrmLaunchLeft.BtnCancel_Click()
                 Return
@@ -883,6 +881,8 @@ Public Class FormMain
             If PageCurrent = PageType.InstanceSetup AndAlso PageCurrentSub = PageSubType.InstanceMod Then
                 'Mod 管理
                 FrmInstanceMod.ReloadModList()
+            ElseIf PageCurrent = PageType.Launch AndAlso FrmLaunchLeft.ServerMode Then
+                FrmLaunchRight.RefreshServerExternalState()
             ElseIf PageCurrent = PageType.InstanceSetup AndAlso (PageCurrentSub = PageSubType.InstanceSetup OrElse PageCurrentSub = PageSubType.InstanceExport) Then
                 '更新当前选用的 Java
                 PageInstanceLeft.ReloadCurrentJava()
@@ -1235,6 +1235,8 @@ Public Class FormMain
         DownloadResourcePack = 5
         DownloadShader = 6
         DownloadCurseForge = 7
+        DownloadServerCore = 8
+        DownloadServerPlugin = 9
         SetupLaunch = 0
         SetupLink = 1
         SetupUI = 2

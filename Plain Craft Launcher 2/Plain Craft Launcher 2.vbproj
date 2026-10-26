@@ -216,6 +216,9 @@
     <Compile Include="Modules\Resource\ResourceVersion.vb" />
     <Compile Include="Modules\Resource\ResourceSearcher.vb" />
     <Compile Include="Modules\Minecraft\ModJava.vb" />
+    <Compile Include="Modules\Minecraft\ModServer.vb" />
+    <Compile Include="Modules\Minecraft\ModServerMslmc.vb" />
+    <Compile Include="Modules\Minecraft\ModServerPlugin.vb" />
     <Compile Include="Modules\Resource\LocalResourceLoaders.vb" />
     <Compile Include="Modules\Minecraft\ModModpack.vb" />
     <Compile Include="Modules\ThirdParty\DragHelper.vb" />
@@ -284,6 +287,12 @@
     </Compile>
     <Compile Include="Pages\PageDownload\PageDownloadCurseForge.xaml.vb">
       <DependentUpon>PageDownloadCurseForge.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\PageDownloadServerCore.xaml.vb">
+      <DependentUpon>PageDownloadServerCore.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\PageDownloadPlugin.xaml.vb">
+      <DependentUpon>PageDownloadPlugin.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageDownload\PageDownloadModify.vb" />
     <Compile Include="Pages\PageDownload\Resource\PageDownloadCompDetail.xaml.vb">
@@ -361,6 +370,9 @@
     </Compile>
     <Compile Include="Pages\PageLaunch\PageLaunchRight.xaml.vb">
       <DependentUpon>PageLaunchRight.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\WindowServerFileEditor.xaml.vb">
+      <DependentUpon>WindowServerFileEditor.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageOther\PageOtherAbout.xaml.vb">
       <DependentUpon>PageOtherAbout.xaml</DependentUpon>
@@ -539,6 +551,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Pages\PageDownload\PageDownloadServerCore.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageDownload\PageDownloadPlugin.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Pages\PageDownload\Resource\PageDownloadCompDetail.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -612,6 +632,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\PageLaunch\PageLaunchRight.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\WindowServerFileEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
